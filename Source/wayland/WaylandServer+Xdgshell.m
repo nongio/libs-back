@@ -54,11 +54,10 @@ xdg_surface_on_configure(void *data, struct xdg_surface *xdg_surface,
   xdg_surface_ack_configure(xdg_surface, serial);
   window->configured = YES;
 
-  if (window->buffer_needs_attach)
-    {
-      NSDebugLog(@"attach: win=%d toplevel", window->window_id);
-      wl_surface_attach(window->surface, window->buffer, 0, 0);
-      wl_surface_commit(window->surface);
+
+    if(window->buffer_needs_attach) {
+        NSDebugLog(@"attach: win=%d toplevel", window->window_id);
+        [window->instance flushwindowrect:NSMakeRect(window->pos_x, window->pos_y, window->width, window->height) :window->window_id];
     }
 
   if (wlconfig->pointer.focus

@@ -29,20 +29,17 @@
 #include <AppKit/NSEvent.h>
 #include <AppKit/NSApplication.h>
 
-static void
-layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *surface,
-			uint32_t serial, uint32_t w, uint32_t h)
-{
-  struct window *window = data;
-  NSDebugLog(@"[%d] layer_surface_configure", window->window_id);
-  WaylandConfig *wlconfig = window->wlconfig;
-  zwlr_layer_surface_v1_ack_configure(surface, serial);
-  window->configured = YES;
-  if (window->buffer_needs_attach)
-    {
-      NSDebugLog(@"attach: win=%d layer", window->window_id);
-      wl_surface_attach(window->surface, window->buffer, 0, 0);
-      wl_surface_commit(window->surface);
+static void layer_surface_configure(void *data,
+		struct zwlr_layer_surface_v1 *surface,
+		uint32_t serial, uint32_t w, uint32_t h) {
+
+    struct window *window = data;
+    NSDebugLog(@"[%d] layer_surface_configure", window->window_id);
+    WaylandConfig *wlconfig = window->wlconfig;
+	zwlr_layer_surface_v1_ack_configure(surface, serial);
+    window->configured = YES;
+    if(window->buffer_needs_attach) {
+        [window->instance flushwindowrect:NSMakeRect(window->pos_x, window->pos_y, window->width, window->height) :window->window_id];
     }
 }
 
