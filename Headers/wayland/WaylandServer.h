@@ -36,7 +36,14 @@
 #include <cairo/cairo.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "cairo/WaylandCairoSurface.h"
+#  ifdef HAVE_CAIRO_EGL
+#    include "cairo/WaylandCairoEglSurface.h"
+#    define _CAIRO_SURFACE_CLASSNAME WaylandCairoEglSurface
+#  elif
+#    include "cairo/WaylandCairoSurface.h"
+#    define _CAIRO_SURFACE_CLASSNAME WaylandCairoSurface
+#  endif
+
 #include "wayland/xdg-shell-client-protocol.h"
 #include "wayland/wlr-layer-shell-client-protocol.h"
 
@@ -132,7 +139,7 @@ struct window {
     struct xdg_positioner *positioner;
     struct zwlr_layer_surface_v1 *layer_surface;
     struct output *output;
-    WaylandCairoSurface *wcs;
+    _CAIRO_SURFACE_CLASSNAME *wcs;
 };
 
 

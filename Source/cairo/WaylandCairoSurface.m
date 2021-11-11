@@ -198,7 +198,7 @@ create_shm_buffer(struct window *window)
 - (void) handleExposeRect: (NSRect)rect
 {
     struct window *window = (struct window*) gsDevice;
-    NSDebugLog(@"[CairoSurface handleExposeRect] %d", window->window_id);
+    //NSDebugLog(@"[CairoSurface handleExposeRect] %d", window->window_id);
 
     int x = NSMinX(rect);
     int y = NSMinY(rect);
