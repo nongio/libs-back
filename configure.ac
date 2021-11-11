@@ -467,8 +467,9 @@ PKG_CHECK_MODULES(CAIRO_FT, cairo-ft, have_cairo_ft=yes, have_cairo_ft=no)
 PKG_CHECK_MODULES(CAIRO_XLIB, cairo-xlib, have_cairo_xlib=yes, have_cairo_xlib=no)
 PKG_CHECK_MODULES(CAIRO_WIN32, cairo-win32, have_cairo_win32=yes, have_cairo_win32=no)
 PKG_CHECK_MODULES(CAIRO_GLITZ, cairo-glitz, have_cairo_glitz=yes, have_cairo_glitz=no)
+PKG_CHECK_MODULES(CAIRO_EGL, cairo-egl, have_cairo_egl=yes, have_cairo_egl=no)
 PKG_CHECK_MODULES(FONTCONFIG, fontconfig, have_fontconfig=yes, have_fontconfig=no)
-
+WITH_CAIRO_EGL=no
 if test "$have_cairo" = no; then
   AC_CHECK_LIB(cairo, cairo_create, have_cairo=yes)
 fi
@@ -484,6 +485,11 @@ fi
 if test "$have_cairo_win32" = no; then
   AC_CHECK_LIB(cairo, cairo_win32_surface_create, have_cairo_win32=yes)
 fi
+
+if test "$have_cairo_egl" = no; then
+  AC_CHECK_LIB(cairo, cairo_egl_surface_create, have_cairo_egl=yes)
+fi
+
 
 #--------------------------------------------------------------------
 # XRender support
@@ -612,12 +618,18 @@ if test x"$BUILD_GRAPHICS" = "xcairo"; then
       CAIRO_LIBS="$CAIRO_LIBS $FONTCONFIG_LIBS"
       CAIRO_CFLAGS="$CAIRO_CFLAGS $FONTCONFIG_CFLAGS"
     fi
-    
     if test "$have_xrender" = yes; then
       if test $BUILD_SERVER = x11 -a "x$have_cairo_xlib" = "xyes"; then
         AC_DEFINE(XRENDER,1,[Define if you have X11 XRender extension])
         CAIRO_LIBS="$CAIRO_LIBS -lXrender"
       fi
+    fi
+    if test $BUILD_SERVER = wayland -a "x$have_cairo_egl" = "xyes"; then
+	AC_MSG_NOTICE([Enabling Cairo egl support])
+        AC_DEFINE(HAVE_CAIRO_EGL,1,[Define if you have cairo-egl support])
+        CAIRO_LIBS="$CAIRO_LIBS -lEGL -lwayland-egl"
+        WITH_CAIRO_EGL=yes
+	AC_SUBST(WITH_CAIRO_EGL)
     fi
     if test "x$WITH_GLITZ" = "xyes" -a "x$have_cairo_glitz" = "xyes"; then
       if test $BUILD_SERVER = win32 -a "x$have_cairo_win32" = "xyes"; then
