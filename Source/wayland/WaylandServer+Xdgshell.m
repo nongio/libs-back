@@ -54,10 +54,12 @@ xdg_surface_on_configure(void *data, struct xdg_surface *xdg_surface,
   xdg_surface_ack_configure(xdg_surface, serial);
   window->configured = YES;
 
-
-    if(window->buffer_needs_attach) {
-        NSDebugLog(@"attach: win=%d toplevel", window->window_id);
-        [window->instance flushwindowrect:NSMakeRect(window->pos_x, window->pos_y, window->width, window->height) :window->window_id];
+  if (window->buffer_needs_attach)
+    {
+      NSDebugLog(@"attach: win=%d", window->window_id);
+      [window->instance flushwindowrect:NSMakeRect(window->pos_x, window->pos_y,
+						   window->width, window->height
+						   ):window->window_id];
     }
 
   if (wlconfig->pointer.focus
@@ -128,7 +130,8 @@ xdg_popup_configure(void *data, struct xdg_popup *xdg_popup, int32_t x,
   struct window *window = data;
   WaylandConfig *wlconfig = window->wlconfig;
 
-  NSDebugLog(@"xdg_popup_configure");
+  NSDebugLog(@"[%d] xdg_popup_configure [%d,%d %dx%d]", window->window_id, x, y,
+	     width, height);
 }
 
 static void

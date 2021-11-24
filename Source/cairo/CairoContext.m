@@ -76,7 +76,7 @@
 #  ifdef HAVE_CAIRO_EGL
 #    include "cairo/WaylandCairoEglSurface.h"
 #    define _CAIRO_SURFACE_CLASSNAME WaylandCairoEglSurface
-#  elif
+#  else
 #    include "cairo/WaylandCairoSurface.h"
 #    define _CAIRO_SURFACE_CLASSNAME WaylandCairoSurface
 #  endif

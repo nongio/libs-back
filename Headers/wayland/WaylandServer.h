@@ -37,13 +37,7 @@
 #include <cairo/cairo.h>
 #include <xkbcommon/xkbcommon.h>
 
-#  ifdef HAVE_CAIRO_EGL
-#    include "cairo/WaylandCairoEglSurface.h"
-#    define _CAIRO_SURFACE_CLASSNAME WaylandCairoEglSurface
-#  elif
-#    include "cairo/WaylandCairoSurface.h"
-#    define _CAIRO_SURFACE_CLASSNAME WaylandCairoSurface
-#  endif
+#include "cairo/CairoSurface.h"
 
 #include "wayland/xdg-shell-client-protocol.h"
 #include "wayland/wlr-layer-shell-client-protocol.h"
@@ -115,36 +109,37 @@ struct output
   void *user_data;
 };
 
-struct window {
-    WaylandConfig *wlconfig;
-    id instance;
-    int window_id;
-    struct wl_list link;
-    BOOL configured; // surface has been configured once
-    BOOL buffer_needs_attach; // there is a new buffer avaialble for the surface
-    BOOL terminated;
-    BOOL moving;
-    BOOL resizing;
+struct window
+{
+  WaylandConfig *wlconfig;
+  id		 instance;
+  int		 window_id;
+  struct wl_list link;
+  BOOL		 configured; // surface has been configured once
+  BOOL buffer_needs_attach;  // there is a new buffer avaialble for the surface
+  BOOL terminated;
+  BOOL moving;
+  BOOL resizing;
 
-    float pos_x;
-    float pos_y;
-    float width;
-    float height;
-    float saved_pos_x;
-    float saved_pos_y;
-    int is_out;
-    int level;
+  float pos_x;
+  float pos_y;
+  float width;
+  float height;
+  float saved_pos_x;
+  float saved_pos_y;
+  int	is_out;
+  int	level;
 
-    unsigned char *data;
-    struct wl_buffer *buffer;
-    struct wl_surface *surface;
-    struct xdg_surface *xdg_surface;
-    struct xdg_toplevel *toplevel;
-    struct xdg_popup *popup;
-    struct xdg_positioner *positioner;
-    struct zwlr_layer_surface_v1 *layer_surface;
-    struct output *output;
-    _CAIRO_SURFACE_CLASSNAME *wcs;
+  unsigned char		*data;
+  struct wl_buffer		   *buffer;
+  struct wl_surface	    *surface;
+  struct xdg_surface	     *xdg_surface;
+  struct xdg_toplevel	      *toplevel;
+  struct xdg_popup		   *popup;
+  struct xdg_positioner	*positioner;
+  struct zwlr_layer_surface_v1 *layer_surface;
+  struct output		*output;
+  CairoSurface *wcs;
 };
 
 @interface WaylandServer : GSDisplayServer

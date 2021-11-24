@@ -6,6 +6,7 @@
 @interface WaylandCairoEglSurface : CairoSurface
 {
 }
+- (void)destroySurface;
 @end
 
 #endif

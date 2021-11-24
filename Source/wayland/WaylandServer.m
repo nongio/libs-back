@@ -130,19 +130,24 @@ handle_global(void *data, struct wl_registry *registry, uint32_t name,
     }
 }
 
-static void handle_global_remove(void *data, struct wl_registry *registry,
-                                 uint32_t name) {}
+static void
+handle_global_remove(void *data, struct wl_registry *registry, uint32_t name)
+{}
 
-static const struct wl_registry_listener registry_listener = {
-    handle_global, handle_global_remove};
+static const struct wl_registry_listener registry_listener
+  = {handle_global, handle_global_remove};
 
-struct window *get_window_with_id(WaylandConfig *wlconfig, int winid) {
+struct window *
+get_window_with_id(WaylandConfig *wlconfig, int winid)
+{
   struct window *window;
 
-  wl_list_for_each(window, &wlconfig->window_list, link) {
-    if (window->window_id == winid) {
-      return window;
-    }
+  wl_list_for_each(window, &wlconfig->window_list, link)
+  {
+    if (window->window_id == winid)
+      {
+	return window;
+      }
   }
 
   return NULL;
@@ -227,10 +232,10 @@ NSToWayland(struct window *window, int ns_y)
     {
       //	NSDebugLog(@"receivedEvent ET_RDESC");
       if (wl_display_dispatch(wlconfig->display) == -1)
-        {
-        [NSException raise:NSWindowServerCommunicationException
-                format:@"Connection to Wayland Server lost"];
-        }
+	{
+	  [NSException raise:NSWindowServerCommunicationException
+		      format:@"Connection to Wayland Server lost"];
+	}
     }
 }
 
@@ -511,8 +516,13 @@ WaylandServer (WindowOps)
   struct window *window;
 
   window = get_window_with_id(wlconfig, winId);
-
+  // FIXME we could resize the current surface instead of creating a new one
+  if (window->wcs)
+    {
+      NSDebugLog(@"[%d] window has already a surface", winId);
+    }
   GSSetDevice(ctxt, window, 0.0, window->height);
+
   DPSinitmatrix(ctxt);
   DPSinitclip(ctxt);
 }
@@ -529,7 +539,7 @@ WaylandServer (WindowOps)
   else
     { //  NSWindowAbove || NSWindowBelow,
 
-      // currently it only creates a new shell for the window which results
+      // currently it only create a new shell for the window which results
       // in popping in front of the window manager
       NSDebugLog(@"[%d] orderwindow to: %fx%f", win, window->pos_x,
 		 window->pos_y);
@@ -909,25 +919,21 @@ WaylandServer (SurfaceRoles)
   NSMenuPanel *nswin = (GSWindowWithNumber(window->window_id));
   if (!nswin)
     {
-      NSDebugLog(@"makeSubmenu can't find nswin");
       return NULL;
     }
   NSMenu *menu = [nswin menu];
   if (!menu)
     {
-      NSDebugLog(@"makeSubmenu can't find menu");
       return NULL;
     }
   NSMenu *supermenu = [menu supermenu];
   if (!supermenu)
     {
-      NSDebugLog(@"makeSubmenu can't find supermenu");
       return NULL;
     }
   NSWindow *parent = [supermenu window];
   if (!parent)
     {
-      NSDebugLog(@"makeSubmenu can't find the parent");
       return NULL;
     }
 
@@ -946,23 +952,7 @@ WaylandServer (SurfaceRoles)
       // if the role is already assigned skip
       return;
     }
-
-  if (wlconfig->layer_shell)
-    {
-      // the preferred way to create a submenu is to use an overlay
-      [self createLayerShell:window
-	       withLayerType:ZWLR_LAYER_SHELL_V1_LAYER_TOP
-	       withNamespace:@"gnustep-submenu"];
-      return;
-    }
-  else
-    {
-      NSDebugLog(@"layer shell not supported, fallback to xdg popup");
-    }
-  // if the layer shell is not available then we use the xdg popup
-  // for that we need a parent toplevel window
-
-  struct window *rootwindow = window; //[self getSuperMenuWindow: window];
+  struct window *rootwindow = window;
   struct window *parentwindow = rootwindow;
   while (rootwindow = [self getSuperMenuWindow:parentwindow])
     {
@@ -970,7 +960,7 @@ WaylandServer (SurfaceRoles)
     }
   if (!parentwindow)
     {
-      //[self createTopLevel: window];
+      NSDebugLog(@"makeSubmenu can't find parent window");
       return;
     }
   NSDebugLog(@"new popup: %d parent id: %d", win, parentwindow->window_id);
@@ -991,9 +981,10 @@ WaylandServer (SurfaceRoles)
 {
   NSDebugLog(@"createPopupShell");
 
-  if (parent->xdg_surface == NULL || parent->toplevel == NULL)
+  if (parent->toplevel == NULL && parent->layer_surface == NULL)
     {
-      NSDebugLog(@"parent surface %d is not toplevel", parent->window_id);
+      NSDebugLog(@"parent surface %d is not toplevel or layer",
+		 parent->window_id);
       return;
     }
   if ([self windowSurfaceHasRole:child])
@@ -1025,11 +1016,13 @@ WaylandServer (SurfaceRoles)
   xdg_positioner_set_offset(positioner, (child->pos_x - parent->pos_x),
 			    (child->pos_y - parent->pos_y));
 
-  //  NSDebugLog(@"xdg_positioner offset: %f,%f",
-  //          (child->pos_x - parent->pos_x), (child->pos_y - parent->pos_y));
-
   child->popup = xdg_surface_get_popup(child->xdg_surface, parent->xdg_surface,
 				       positioner);
+
+  if (parent->layer_surface)
+    {
+      zwlr_layer_surface_v1_get_popup(parent->layer_surface, child->popup);
+    }
 
   xdg_popup_add_listener(child->popup, &xdg_popup_listener, child);
   xdg_surface_add_listener(child->xdg_surface, &xdg_surface_listener, child);
@@ -1037,11 +1030,12 @@ WaylandServer (SurfaceRoles)
   xdg_surface_set_window_geometry(child->xdg_surface, 0, 0, child->width,
 				  child->height);
 
-  NSDebugLog(@"child_geometry : %f,%f %fx%f", child->pos_x - parent->pos_x,
-	     child->pos_y - parent->pos_y, child->width, child->height);
   wl_surface_commit(child->surface);
-  wl_display_dispatch_pending(wlconfig->display);
-  wl_display_flush(wlconfig->display);
+  wl_display_roundtrip(wlconfig->display);
+  //    wl_display_dispatch_pending(wlconfig->display);
+  //    wl_display_flush(wlconfig->display);
+
+  xdg_positioner_destroy(positioner);
 }
 
 - (void)destroySurfaceRole:(struct window *)window
@@ -1071,6 +1065,10 @@ WaylandServer (SurfaceRoles)
 	}
       xdg_surface_destroy(window->xdg_surface);
       window->xdg_surface = NULL;
+    }
+  if (window->wcs)
+    {
+      [window->wcs destroySurface];
     }
   window->configured = NO;
 }
