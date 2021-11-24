@@ -50,7 +50,10 @@ ifeq ($(BUILD_SERVER),x11)
   endif
 else
   ifeq ($(BUILD_SERVER),wayland)
-    cairo_OBJC_FILES += WaylandCairoSurface.m
+      cairo_OBJC_FILES += WaylandCairoSurface.m
+    ifeq ($(WITH_CAIRO_EGL),yes)
+      cairo_OBJC_FILES += WaylandCairoEglSurface.m
+    endif
   else
     ifeq ($(BUILD_GRAPHICS),cairo)
       ifeq ($(WITH_GLITZ),yes)
