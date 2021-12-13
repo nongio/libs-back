@@ -51,6 +51,9 @@ ifeq ($(BUILD_SERVER),x11)
 else
   ifeq ($(BUILD_SERVER),wayland)
     cairo_OBJC_FILES += WaylandCairoShmSurface.m
+    ifeq ($(WITH_CAIRO_EGL),yes)
+      cairo_OBJC_FILES += WaylandCairoEglSurface.m
+    endif
   else
     ifeq ($(BUILD_GRAPHICS),cairo)
       ifeq ($(WITH_GLITZ),yes)

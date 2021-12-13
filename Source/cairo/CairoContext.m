@@ -73,9 +73,14 @@
 #elif BUILD_SERVER == SERVER_wayland
 #  include "wayland/WaylandServer.h"
 #  include "cairo/CairoGState.h"
-#  include "cairo/WaylandCairoShmSurface.h"
+#  ifdef HAVE_CAIRO_EGL
+#    include "cairo/WaylandCairoEglSurface.h"
+#    define _CAIRO_SURFACE_CLASSNAME WaylandCairoEglSurface
+#  else
+#    include "cairo/WaylandCairoShmSurface.h"
+#    define _CAIRO_SURFACE_CLASSNAME WaylandCairoShmSurface
+#  endif
 #  define _CAIRO_GSTATE_CLASSNAME CairoGState
-#  define _CAIRO_SURFACE_CLASSNAME WaylandCairoShmSurface
 #else
 #  error Invalid server for Cairo backend : non implemented
 #endif /* BUILD_SERVER */

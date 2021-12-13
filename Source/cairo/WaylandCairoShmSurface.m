@@ -1,4 +1,4 @@
-/* WaylandCairoSurface
+/* WaylandCairoShmSurface
 
    WaylandCairoShmSurface - A cairo surface backed by a wayland
    shared memory buffer.
